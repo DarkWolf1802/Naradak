@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Chronicles of Naradak — Juego Completo</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Karla:wght@400;500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/demo.css">
+<script src="js/online/cuenta.js"></script>
+</head>
+<body>
+<script src="js/intro.js"></script>
+<div id="game" style="max-width:900px;margin:0 auto"></div>
+
+<!-- Datos -->
+<script src="js/data/clases.js"></script>
+<script src="js/data/iconos.js"></script>
+<script src="js/data/iconos_items.js"></script>
+<script src="js/data/items.js"></script>
+<script src="js/data/mundo.js"></script>
+<script src="js/data/loot.js"></script>
+<script src="js/data/gremio.js"></script>
+<script src="js/data/forja.js"></script>
+<script src="js/data/alquimia.js"></script>
+
+<!-- Sistemas, núcleo y UI (orden = orden original) -->
+<script src="js/sistemas/profesiones.js"></script>
+<script src="js/core/estado.js"></script>
+<script src="js/core/combate.js"></script>
+<script src="js/core/danos.js"></script>
+<script src="js/ui/render.js"></script>
+<script src="js/sistemas/taberna.js"></script>
+<script src="js/core/combate_velocidad.js"></script>
+<script src="js/sistemas/equipamiento.js"></script>
+<script src="js/sistemas/talentos.js"></script>
+<script src="js/online/online.js"></script>   <!-- antes de personaje.js: render() lo necesita al cargar -->
+<script src="js/ui/personaje.js"></script>
+<script src="js/sistemas/sonido.js"></script>
+
+<!-- Demo de combate en tiempo real -->
+<script src="js/demo/combate_demo.js"></script>
+
+<!-- Arranque -->
+<script src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#12100c">
+<title>Naradak — Iniciar sesión</title>
+<style>
+:root{--bg:#12100c;--card:#1c1812;--text:#e8dcc4;--muted:#9a8c72;--accent:#c9923c;--accent-soft:rgba(201,146,60,.16);--err:#e08080;--ok:#9ad08a;--border:rgba(201,146,60,.22)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(900px 480px at 70% -10%,rgba(201,146,60,.12),transparent 60%),var(--bg);color:var(--text);font-family:Georgia,"Times New Roman",serif;padding:max(16px,env(safe-area-inset-top)) 16px 28px;display:flex;justify-content:center}
+main{width:100%;max-width:400px;text-align:center}
+img{width:min(40vw,150px);height:auto;margin:6px auto;display:block;filter:drop-shadow(0 6px 18px rgba(0,0,0,.6))}
+h1{margin:0 0 14px;font-size:20px;letter-spacing:.08em;color:var(--accent)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:left}
+.tabs{display:flex;gap:6px;margin-bottom:14px}
+.tabs button{flex:1;padding:9px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font:inherit;font-size:14px;cursor:pointer}
+.tabs button.on{background:var(--accent-soft);border-color:var(--accent);color:var(--text)}
+label{display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:12px 0 6px}
+input{width:100%;padding:12px;border-radius:8px;border:1px solid var(--border);background:#100e0a;color:var(--text);font-size:16px;font-family:inherit}
+input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.go{display:block;width:100%;margin-top:16px;padding:13px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#1a1408;font-weight:700;font-size:16px;font-family:inherit;cursor:pointer}
+.go[disabled]{opacity:.55}
+#msg{min-height:20px;margin-top:12px;font-size:14px;text-align:center;line-height:1.4}
+#msg.err{color:var(--err)}#msg.ok{color:var(--ok)}
+.hint{font-size:12px;color:var(--muted);margin-top:6px}
+a{color:var(--accent)}
+#sesion{display:none;text-align:center}
+</style>
+</head>
+<body>
+<main>
+ <img src="assets/logo.png" alt="">
+ <h1>THE CHRONICLES OF NARADAK</h1>
+ <div class="card">
+  <div id="sesion">
+   <p>Sesión iniciada como <b id="quien"></b>.</p>
+   <button class="go" id="bSeguir">Continuar</button>
+   <p class="hint"><a href="#" id="bOtra">Usar otra cuenta</a></p>
+  </div>
+  <form id="form" autocomplete="on">
+   <div class="tabs"><button type="button" id="tEntrar" class="on">Entrar</button><button type="button" id="tCrear">Crear cuenta</button></div>
+   <label for="u">Usuario</label>
+   <input id="u" name="username" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="32" required>
+   <div class="hint" id="hu" style="display:none">Elige el usuario y la contraseña que quieras.</div>
+   <label for="p">Contraseña</label>
+   <input id="p" name="password" type="password" autocomplete="current-password" maxlength="1024" required>
+   <div id="r2" style="display:none"><label for="p2">Repetir contraseña</label><input id="p2" type="password" autocomplete="new-password" maxlength="1024"></div>
+   <button class="go" id="bGo" type="submit">Entrar</button>
+   <div id="msg"></div>
+  </form>
+ </div>
+ <p class="hint">Tus partidas se guardan en el servidor, asociadas a tu cuenta, y te siguen a cualquier dispositivo.</p>
+</main>
+<script>
+"use strict";
+(function(){
+ var $=function(i){return document.getElementById(i);};
+ var K_AUTH="nrdk_auth",modo="entrar";
+ function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v);}catch(e){}return null;}
+ var q=new URLSearchParams(location.search),next=q.get("next")||"/";
+ if(next.charAt(0)!=="/"||next.charAt(1)==="/"||/^\/login\.html/.test(next))next="/";
+ function msg(c,t){$("msg").className=c;$("msg").textContent=t;}
+ function setModo(m){modo=m;$("tEntrar").className=m==="entrar"?"on":"";$("tCrear").className=m==="crear"?"on":"";
+  $("r2").style.display=$("hu").style.display=m==="crear"?"block":"none";$("bGo").textContent=m==="crear"?"Crear cuenta":"Entrar";
+  $("p").autocomplete=m==="crear"?"new-password":"current-password";msg("","");}
+ $("tEntrar").onclick=function(){setModo("entrar");};$("tCrear").onclick=function(){location.href="/registro.html";};   /* el alta de cuentas vive en su propia página */
+ try{var h0=new URLSearchParams((location.hash||"").slice(1)),t0=h0.get("auth")||q.get("nrdk_auth"),u0=h0.get("u")||q.get("nrdk_u");   /* sesión entregada por el cliente (APK) */
+  if(t0&&u0&&!q.get("salir")){ls(K_AUTH,JSON.stringify({t:t0,u:u0}));location.replace(next);return;}}catch(e){}
+ var a=null;try{a=JSON.parse(ls(K_AUTH)||"null");}catch(e){}
+ if(q.get("salir")){a=null;   /* el juego puede re-guardar al descargarse la página: vaciar la copia local de la cuenta saliente */
+  try{for(var i=localStorage.length-1;i>=0;i--){var k=localStorage.key(i);if(k&&/^naradak_/.test(k))localStorage.removeItem(k);}localStorage.setItem("nrdk_cache_user","-");}catch(e){}
+ }
+ if(a&&a.t&&a.u){
+  $("sesion").style.display="block";$("form").style.display="none";$("quien").textContent=a.u;
+  $("bSeguir").onclick=function(){location.href=next;};
+  $("bOtra").onclick=function(e){e.preventDefault();ls(K_AUTH,null);location.reload();};
+ }
+ fetch("/api/estado",{cache:"no-store"}).then(function(r){return r.json();}).then(function(e){if(e&&e.registro===false){$("tCrear").style.display="none";}}).catch(function(){});
+ $("form").onsubmit=function(ev){
+  ev.preventDefault();
+  var u=$("u").value.trim(),p=$("p").value;
+  if(modo==="crear"&&p!==$("p2").value){msg("err","Las contraseñas no coinciden.");return;}
+  $("bGo").disabled=true;msg("","Un momento…");
+  fetch("/api/"+(modo==="crear"?"registro":"login"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({usuario:u,clave:p})})
+   .then(function(r){return r.json().then(function(d){return{ok:r.ok,d:d};});})
+   .then(function(x){
+    if(!x.ok){msg("err",x.d.error||"Error");$("bGo").disabled=false;return;}
+    ls(K_AUTH,JSON.stringify({t:x.d.token,u:x.d.usuario}));
+    msg("ok","¡Bienvenido, "+x.d.usuario+"!");setTimeout(function(){location.href=next;},300);
+   })
+   .catch(function(){msg("err","No se pudo contactar con el servidor.");$("bGo").disabled=false;});
+ };
+})();
+</script>
+</body>
+</html>

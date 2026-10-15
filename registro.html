@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#12100c">
+<title>Naradak — Crear cuenta</title>
+<style>
+:root{--bg:#12100c;--card:#1c1812;--text:#e8dcc4;--muted:#9a8c72;--accent:#c9923c;--accent-soft:rgba(201,146,60,.16);--err:#e08080;--ok:#9ad08a;--border:rgba(201,146,60,.22)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(900px 480px at 70% -10%,rgba(201,146,60,.12),transparent 60%),var(--bg);color:var(--text);font-family:Georgia,"Times New Roman",serif;padding:max(16px,env(safe-area-inset-top)) 16px 28px;display:flex;justify-content:center}
+main{width:100%;max-width:400px;text-align:center}
+img{width:min(40vw,150px);height:auto;margin:6px auto;display:block;filter:drop-shadow(0 6px 18px rgba(0,0,0,.6))}
+h1{margin:0 0 4px;font-size:20px;letter-spacing:.08em;color:var(--accent)}
+.sub{font-size:13px;color:var(--muted);margin-bottom:14px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:left}
+label{display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:12px 0 6px}
+label:first-child{margin-top:0}
+input{width:100%;padding:12px;border-radius:8px;border:1px solid var(--border);background:#100e0a;color:var(--text);font-size:16px;font-family:inherit}
+input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.go{display:block;width:100%;margin-top:16px;padding:13px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#1a1408;font-weight:700;font-size:16px;font-family:inherit;cursor:pointer;text-align:center;text-decoration:none}
+.go.sec{background:transparent;color:var(--text);border-color:var(--border);font-weight:600;font-size:14px;padding:10px}
+.go[disabled]{opacity:.55}
+#msg{min-height:20px;margin-top:12px;font-size:14px;text-align:center;line-height:1.4}
+#msg.err{color:var(--err)}#msg.ok{color:var(--ok)}
+.hint{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.4}
+#hecho,#cerrado{display:none;text-align:center}
+#hecho h2{margin:0 0 8px;font-size:18px;color:var(--ok)}
+</style>
+</head>
+<body>
+<main>
+ <img src="assets/logo.png" alt="">
+ <h1>THE CHRONICLES OF NARADAK</h1>
+ <div class="sub">Crear cuenta nueva</div>
+ <div class="card">
+  <div id="cerrado"><p>El registro de cuentas está <b>cerrado</b> en este servidor.</p><p class="hint">Pide al administrador que te cree una cuenta.</p></div>
+  <div id="hecho">
+   <h2>✔ Cuenta creada</h2>
+   <p>Ya puedes entrar con <b id="quien"></b>.</p>
+   <p class="hint">Vuelve a la <b>app Naradak</b> e inicia sesión con tu usuario y contraseña.</p>
+   <a class="go sec" id="bJugar" href="/">Jugar desde este navegador</a>
+  </div>
+  <form id="form" autocomplete="on">
+   <label for="u">Usuario</label>
+   <input id="u" name="username" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="32" required>
+   <label for="p">Contraseña</label>
+   <input id="p" name="password" type="password" autocomplete="new-password" maxlength="1024" required>
+   <label for="p2">Repetir contraseña</label>
+   <input id="p2" type="password" autocomplete="new-password" maxlength="1024" required>
+   <div class="hint" id="hint">Elige el usuario y la contraseña que quieras.</div>
+   <button class="go" id="bGo" type="submit">Crear cuenta</button>
+   <div id="msg"></div>
+  </form>
+ </div>
+ <p class="hint">Tus partidas se guardan en el servidor, asociadas a tu cuenta, y te siguen a cualquier dispositivo.</p>
+</main>
+<script>
+"use strict";
+(function(){
+ var $=function(i){return document.getElementById(i);},K_AUTH="nrdk_auth",min=4;
+ function ls(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+ function msg(c,t){$("msg").className=c;$("msg").textContent=t;}
+ fetch("/api/estado",{cache:"no-store"}).then(function(r){return r.json();}).then(function(e){
+  if(e&&e.minClave){min=e.minClave;$("hint").textContent="Elige el usuario y la contraseña que quieras (mínimo "+min+" caracteres).";}
+  if(e&&e.registro===false){$("form").style.display="none";$("cerrado").style.display="block";}
+ }).catch(function(){});
+ $("form").onsubmit=function(ev){
+  ev.preventDefault();
+  var u=$("u").value.trim(),p=$("p").value;
+  if(!u){msg("err","Escribe un nombre de usuario.");return;}
+  if(p.length<min){msg("err","La contraseña debe tener al menos "+min+" caracteres.");return;}
+  if(p!==$("p2").value){msg("err","Las contraseñas no coinciden.");return;}
+  $("bGo").disabled=true;msg("","Creando cuenta…");
+  fetch("/api/registro",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({usuario:u,clave:p})})
+   .then(function(r){return r.json().then(function(d){return{ok:r.ok,d:d};});})
+   .then(function(x){
+    if(!x.ok){msg("err",x.d.error||"Error");$("bGo").disabled=false;return;}
+    ls(K_AUTH,JSON.stringify({t:x.d.token,u:x.d.usuario}));   /* por si quiere jugar desde este mismo navegador */
+    $("form").style.display="none";$("quien").textContent=x.d.usuario;$("hecho").style.display="block";
+   })
+   .catch(function(){msg("err","No se pudo contactar con el servidor.");$("bGo").disabled=false;});
+ };
+})();
+</script>
+</body>
+</html>
